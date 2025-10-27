@@ -1,2 +1,204 @@
-# vortex-ruby-sdk
-Vortex Ruby SDK
+# Vortex Ruby SDK
+
+A Ruby SDK for the Vortex invitation system, providing seamless integration with the same functionality and API compatibility as other Vortex SDKs (Node.js, Python, Java, Go).
+
+## Features
+
+- **JWT Generation**: Identical algorithm to other SDKs for complete compatibility
+- **Complete API Coverage**: All invitation management operations
+- **Framework Integration**: Built-in Rails and Sinatra helpers
+- **Same Route Structure**: Ensures React provider compatibility
+- **Comprehensive Testing**: Full test coverage with RSpec
+- **Type Safety**: Clear method signatures and documentation
+
+## Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'vortex-ruby-sdk'
+```
+
+And then execute:
+
+```bash
+bundle install
+```
+
+Or install it yourself as:
+
+```bash
+gem install vortex-ruby-sdk
+```
+
+## Basic Usage
+
+```ruby
+require 'vortex'
+
+# Initialize the client
+client = Vortex::Client.new(ENV['VORTEX_API_KEY'])
+
+# Generate JWT for a user
+jwt = client.generate_jwt(
+  user_id: 'user123',
+  identifiers: [{ type: 'email', value: 'user@example.com' }],
+  groups: [{ id: 'team1', type: 'team', name: 'Engineering' }],
+  role: 'admin'
+)
+
+# Get invitations by target
+invitations = client.get_invitations_by_target('email', 'user@example.com')
+
+# Accept invitations
+client.accept_invitations(['inv1', 'inv2'], { type: 'email', value: 'user@example.com' })
+
+# Get invitations by group
+group_invitations = client.get_invitations_by_group('team', 'team1')
+```
+
+## Rails Integration
+
+Create a controller with Vortex routes:
+
+```ruby
+# app/controllers/vortex_controller.rb
+class VortexController < ApplicationController
+  include Vortex::Rails::Controller
+
+  private
+
+  def authenticate_vortex_user
+    # Return user data hash or nil
+    {
+      user_id: current_user.id,
+      identifiers: [{ type: 'email', value: current_user.email }],
+      groups: current_user.teams.map { |team|
+        { id: team.id, type: 'team', name: team.name }
+      },
+      role: current_user.role
+    }
+  end
+
+  def authorize_vortex_operation(operation, user)
+    # Implement your authorization logic
+    case operation
+    when 'JWT', 'GET_INVITATIONS'
+      true
+    when 'REVOKE_INVITATION'
+      user[:role] == 'admin'
+    else
+      false
+    end
+  end
+
+  def vortex_client
+    @vortex_client ||= Vortex::Client.new(Rails.application.credentials.vortex_api_key)
+  end
+end
+```
+
+Add routes to `config/routes.rb`:
+
+```ruby
+Rails.application.routes.draw do
+  scope '/api/vortex', controller: 'vortex' do
+    post 'jwt', action: 'generate_jwt'
+    get 'invitations', action: 'get_invitations_by_target'
+    get 'invitations/:invitation_id', action: 'get_invitation'
+    delete 'invitations/:invitation_id', action: 'revoke_invitation'
+    post 'invitations/accept', action: 'accept_invitations'
+    get 'invitations/by-group/:group_type/:group_id', action: 'get_invitations_by_group'
+    delete 'invitations/by-group/:group_type/:group_id', action: 'delete_invitations_by_group'
+    post 'invitations/:invitation_id/reinvite', action: 'reinvite'
+  end
+end
+```
+
+## Sinatra Integration
+
+```ruby
+require 'sinatra/base'
+require 'vortex/sinatra'
+
+class MyApp < Sinatra::Base
+  register Vortex::Sinatra
+
+  configure do
+    set :vortex_api_key, ENV['VORTEX_API_KEY']
+  end
+
+  def authenticate_vortex_user
+    # Implement authentication logic
+    user_id = request.env['HTTP_X_USER_ID']
+    return nil unless user_id
+
+    {
+      user_id: user_id,
+      identifiers: [{ type: 'email', value: 'user@example.com' }],
+      groups: [{ id: 'team1', type: 'team', name: 'Engineering' }],
+      role: 'user'
+    }
+  end
+
+  def authorize_vortex_operation(operation, user)
+    # Implement authorization logic
+    user != nil
+  end
+end
+```
+
+## API Methods
+
+All methods match the functionality of other Vortex SDKs:
+
+### JWT Generation
+- `generate_jwt(user_id:, identifiers:, groups:, role: nil)` - Generate JWT token
+
+### Invitation Management
+- `get_invitations_by_target(target_type, target_value)` - Get invitations by target
+- `get_invitation(invitation_id)` - Get specific invitation
+- `revoke_invitation(invitation_id)` - Revoke invitation
+- `accept_invitations(invitation_ids, target)` - Accept invitations
+- `get_invitations_by_group(group_type, group_id)` - Get group invitations
+- `delete_invitations_by_group(group_type, group_id)` - Delete group invitations
+- `reinvite(invitation_id)` - Reinvite user
+
+## Route Structure
+
+The SDK provides these routes (same as other SDKs for React provider compatibility):
+
+- `POST /api/vortex/jwt`
+- `GET /api/vortex/invitations?targetType=email&targetValue=user@example.com`
+- `GET /api/vortex/invitations/:id`
+- `DELETE /api/vortex/invitations/:id`
+- `POST /api/vortex/invitations/accept`
+- `GET /api/vortex/invitations/by-group/:type/:id`
+- `DELETE /api/vortex/invitations/by-group/:type/:id`
+- `POST /api/vortex/invitations/:id/reinvite`
+
+## Error Handling
+
+All methods raise `Vortex::VortexError` on failures:
+
+```ruby
+begin
+  jwt = client.generate_jwt(user_data)
+rescue Vortex::VortexError => e
+  logger.error "Vortex error: #{e.message}"
+end
+```
+
+## Development
+
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt.
+
+To install this gem onto your local machine, run `bundle exec rake install`.
+
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/vortexsoftware/vortex-ruby-sdk.
+
+## License
+
+The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).

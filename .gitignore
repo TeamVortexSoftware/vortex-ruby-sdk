@@ -1,0 +1,58 @@
+# Ruby SDK .gitignore
+
+# Bundler
+.bundle/
+vendor/bundle/
+vendor/cache/
+vendor/ruby/
+
+# Gems
+*.gem
+Gemfile.lock
+
+# RubyGems packaging
+pkg/
+
+# Documentation
+doc/
+.yardoc/
+
+# Testing
+coverage/
+.rspec_status
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+.tmp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ruby version files
+.ruby-version
+.rbenv-version
+
+# Backup files
+*~
+*.swp
+*.swo
+
+# Bundler binstubs
+bin/
+
+# Build artifacts
+build/
+dist/
