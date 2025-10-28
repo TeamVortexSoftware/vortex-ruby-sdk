@@ -43,7 +43,7 @@ client = Vortex::Client.new(ENV['VORTEX_API_KEY'])
 jwt = client.generate_jwt(
   user_id: 'user123',
   identifiers: [{ type: 'email', value: 'user@example.com' }],
-  groups: [{ id: 'team1', type: 'team', name: 'Engineering' }],
+  groups: [{ 'groupId' => 'team1', 'type' => 'team', 'name' => 'Engineering' }],
   role: 'admin'
 )
 
@@ -74,7 +74,7 @@ class VortexController < ApplicationController
       user_id: current_user.id,
       identifiers: [{ type: 'email', value: current_user.email }],
       groups: current_user.teams.map { |team|
-        { id: team.id, type: 'team', name: team.name }
+        { 'groupId' => team.id, 'type' => 'team', 'name' => team.name }
       },
       role: current_user.role
     }
@@ -136,7 +136,7 @@ class MyApp < Sinatra::Base
     {
       user_id: user_id,
       identifiers: [{ type: 'email', value: 'user@example.com' }],
-      groups: [{ id: 'team1', type: 'team', name: 'Engineering' }],
+      groups: [{ 'groupId' => 'team1', 'type' => 'team', 'name' => 'Engineering' }],
       role: 'user'
     }
   end
