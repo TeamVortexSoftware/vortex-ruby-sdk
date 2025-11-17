@@ -25,16 +25,15 @@ class VortexSinatraApp < Sinatra::Base
     user_id = request.env['HTTP_X_USER_ID'] || 'demo-user'
     return nil unless user_id
 
-    # Return user data in the format expected by Vortex
+    # Build admin_scopes array
+    admin_scopes = []
+    admin_scopes << 'autoJoin' if request.env['HTTP_X_USER_ROLE'] == 'admin'
+
+    # Return user data
     {
-      user_id: user_id,
-      identifiers: [
-        { type: 'email', value: request.env['HTTP_X_USER_EMAIL'] || 'demo@example.com' }
-      ],
-      groups: [
-        { id: 'team1', type: 'team', name: 'Engineering' }
-      ],
-      role: request.env['HTTP_X_USER_ROLE'] || 'user'
+      id: user_id,
+      email: request.env['HTTP_X_USER_EMAIL'] || 'demo@example.com',
+      admin_scopes: admin_scopes
     }
   end
 
@@ -48,9 +47,9 @@ class VortexSinatraApp < Sinatra::Base
     when 'ACCEPT_INVITATIONS'
       true # Everyone can accept invitations
     when 'REVOKE_INVITATION', 'DELETE_GROUP_INVITATIONS'
-      user[:role] == 'admin' # Only admins can delete
+      user[:admin_scopes]&.include?('autoJoin') # Only admins can delete
     when 'GET_GROUP_INVITATIONS', 'REINVITE'
-      user[:role] == 'admin' # Only admins can manage groups
+      user[:admin_scopes]&.include?('autoJoin') # Only admins can manage groups
     else
       false
     end

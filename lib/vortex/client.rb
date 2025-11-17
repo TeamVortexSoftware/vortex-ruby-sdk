@@ -23,18 +23,27 @@ module Vortex
       @connection = build_connection
     end
 
-    # Generate a JWT for the given user data
+    # Generate a JWT token for a user
     #
-    # This uses the exact same algorithm as the Node.js SDK to ensure
-    # complete compatibility across all platforms.
-    #
-    # @param user_id [String] Unique identifier for the user
-    # @param identifiers [Array<Hash>] Array of identifier hashes with :type and :value
-    # @param groups [Array<Hash>] Array of group hashes with :id, :type, and :name
-    # @param role [String, nil] Optional user role
+    # @param user [Hash] User hash with :id, :email, and optional :admin_scopes
+    # @param extra [Hash, nil] Optional additional properties to include in the JWT payload
     # @return [String] JWT token
     # @raise [VortexError] If API key is invalid or JWT generation fails
-    def generate_jwt(user_id:, identifiers:, groups:, role: nil)
+    #
+    # @example Simple usage
+    #   client = Vortex::Client.new(ENV['VORTEX_API_KEY'])
+    #   user = {
+    #     id: 'user-123',
+    #     email: 'user@example.com',
+    #     admin_scopes: ['autoJoin']
+    #   }
+    #   jwt = client.generate_jwt(user: user)
+    #
+    # @example With additional properties
+    #   user = { id: 'user-123', email: 'user@example.com' }
+    #   extra = { role: 'admin', department: 'Engineering' }
+    #   jwt = client.generate_jwt(user: user, extra: extra)
+    def generate_jwt(user:, extra: nil)
       # Parse API key - same format as Node.js SDK
       prefix, encoded_id, key = @api_key.split('.')
 
@@ -52,7 +61,7 @@ module Vortex
       # Step 1: Derive signing key from API key + ID (same as Node.js)
       signing_key = OpenSSL::HMAC.digest('sha256', key, id)
 
-      # Step 2: Build header + payload (same structure as Node.js)
+      # Step 2: Build header + payload
       header = {
         iat: Time.now.to_i,
         alg: 'HS256',
@@ -60,13 +69,22 @@ module Vortex
         kid: id
       }
 
+      # Build payload - start with required fields
       payload = {
-        userId: user_id,
-        groups: groups,
-        role: role,
-        expires: expires,
-        identifiers: identifiers
+        userId: user[:id],
+        userEmail: user[:email],
+        expires: expires
       }
+
+      # Add userIsAutoJoinAdmin if 'autoJoin' is in admin_scopes
+      if user[:admin_scopes]&.include?('autoJoin')
+        payload[:userIsAutoJoinAdmin] = true
+      end
+
+      # Add any additional properties from extra
+      if extra && !extra.empty?
+        payload.merge!(extra)
+      end
 
       # Step 3: Base64URL encode (same as Node.js)
       header_b64 = base64url_encode(JSON.generate(header))
@@ -80,6 +98,8 @@ module Vortex
     rescue => e
       raise VortexError, "JWT generation failed: #{e.message}"
     end
+
+    public
 
     # Get invitations by target
     #

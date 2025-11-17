@@ -5,6 +5,8 @@ A Ruby SDK for the Vortex invitation system, providing seamless integration with
 ## Features
 
 - **JWT Generation**: Identical algorithm to other SDKs for complete compatibility
+- **Simplified JWT Format**: New streamlined payload with `userEmail` and `userIsAutoJoinAdmin`
+- **Backward Compatible**: Legacy JWT format still supported
 - **Complete API Coverage**: All invitation management operations
 - **Framework Integration**: Built-in Rails and Sinatra helpers
 - **Same Route Structure**: Ensures React provider compatibility
@@ -39,13 +41,15 @@ require 'vortex'
 # Initialize the client
 client = Vortex::Client.new(ENV['VORTEX_API_KEY'])
 
-# Generate JWT for a user
-jwt = client.generate_jwt(
-  user_id: 'user123',
-  identifiers: [{ type: 'email', value: 'user@example.com' }],
-  groups: [{ 'groupId' => 'team1', 'type' => 'team', 'name' => 'Engineering' }],
-  role: 'admin'
-)
+# Create a user object
+user = {
+  id: 'user-123',
+  email: 'user@example.com',
+  admin_scopes: ['autoJoin']  # Optional - maps to userIsAutoJoinAdmin
+}
+
+# Generate JWT
+jwt = client.generate_jwt(user: user)
 
 # Get invitations by target
 invitations = client.get_invitations_by_target('email', 'user@example.com')
@@ -55,6 +59,22 @@ client.accept_invitations(['inv1', 'inv2'], { type: 'email', value: 'user@exampl
 
 # Get invitations by group
 group_invitations = client.get_invitations_by_group('team', 'team1')
+```
+
+### Generate JWT with Additional Properties
+
+```ruby
+user = {
+  id: 'user-123',
+  email: 'user@example.com'
+}
+
+extra = {
+  role: 'admin',
+  department: 'Engineering'
+}
+
+jwt = client.generate_jwt(user: user, extra: extra)
 ```
 
 ## Rails Integration
@@ -70,13 +90,13 @@ class VortexController < ApplicationController
 
   def authenticate_vortex_user
     # Return user data hash or nil
+    admin_scopes = []
+    admin_scopes << 'autoJoin' if current_user.admin?
+
     {
-      user_id: current_user.id,
-      identifiers: [{ type: 'email', value: current_user.email }],
-      groups: current_user.teams.map { |team|
-        { 'groupId' => team.id, 'type' => 'team', 'name' => team.name }
-      },
-      role: current_user.role
+      id: current_user.id,
+      email: current_user.email,
+      admin_scopes: admin_scopes
     }
   end
 
@@ -86,7 +106,7 @@ class VortexController < ApplicationController
     when 'JWT', 'GET_INVITATIONS'
       true
     when 'REVOKE_INVITATION'
-      user[:role] == 'admin'
+      user[:admin_scopes]&.include?('autoJoin')
     else
       false
     end
@@ -134,10 +154,9 @@ class MyApp < Sinatra::Base
     return nil unless user_id
 
     {
-      user_id: user_id,
-      identifiers: [{ type: 'email', value: 'user@example.com' }],
-      groups: [{ 'groupId' => 'team1', 'type' => 'team', 'name' => 'Engineering' }],
-      role: 'user'
+      id: user_id,
+      email: 'user@example.com',
+      admin_scopes: []  # Optional
     }
   end
 
@@ -153,7 +172,9 @@ end
 All methods match the functionality of other Vortex SDKs:
 
 ### JWT Generation
-- `generate_jwt(user_id:, identifiers:, groups:, role: nil)` - Generate JWT token
+- `generate_jwt(user:, extra: nil)` - Generate JWT token
+  - `user`: Hash with `:id`, `:email`, and optional `:admin_scopes` array
+  - `extra`: Optional hash with additional properties to include in JWT payload
 
 ### Invitation Management
 - `get_invitations_by_target(target_type, target_value)` - Get invitations by target
@@ -177,13 +198,33 @@ The SDK provides these routes (same as other SDKs for React provider compatibili
 - `DELETE /api/vortex/invitations/by-group/:type/:id`
 - `POST /api/vortex/invitations/:id/reinvite`
 
+## JWT Payload Structure
+
+The SDK generates JWTs with the following payload structure:
+
+```ruby
+{
+  userId: 'user-123',
+  userEmail: 'user@example.com',
+  userIsAutoJoinAdmin: true,  # Only included if 'autoJoin' is in admin_scopes
+  expires: 1234567890
+}
+```
+
+Additional properties from the `extra` parameter are merged into the payload.
+
 ## Error Handling
 
 All methods raise `Vortex::VortexError` on failures:
 
 ```ruby
 begin
-  jwt = client.generate_jwt(user_data)
+  jwt = client.generate_jwt(
+    user: {
+      id: 'user-123',
+      email: 'user@example.com'
+    }
+  )
 rescue Vortex::VortexError => e
   logger.error "Vortex error: #{e.message}"
 end

@@ -13,27 +13,33 @@ require 'vortex'
 API_KEY = ENV['VORTEX_API_KEY'] || 'your-api-key-here'
 client = Vortex::Client.new(API_KEY)
 
-# Example user data - same structure as other SDKs
-user_data = {
-  user_id: 'user123',
-  identifiers: [
-    { type: 'email', value: 'user@example.com' }
-  ],
-  groups: [
-    { id: 'team1', type: 'team', name: 'Engineering Team' },
-    { id: 'dept1', type: 'department', name: 'Product Development' }
-  ],
-  role: 'admin'
+# Example user data
+user = {
+  id: 'user123',
+  email: 'user@example.com',
+  admin_scopes: ['autoJoin']  # Optional - maps to userIsAutoJoinAdmin
+}
+
+# Additional properties (optional)
+extra = {
+  role: 'admin',
+  department: 'Engineering'
 }
 
 begin
   puts "=== Vortex Ruby SDK Example ==="
   puts
 
-  # 1. Generate JWT
+  # 1. Generate JWT for user
   puts "1. Generating JWT for user..."
-  jwt = client.generate_jwt(**user_data)
+  jwt = client.generate_jwt(user: user)
   puts "JWT generated: #{jwt[0..50]}..."
+  puts
+
+  # 1b. Generate JWT with additional properties
+  puts "1b. Generating JWT with additional properties..."
+  jwt_with_extra = client.generate_jwt(user: user, extra: extra)
+  puts "JWT with extra generated: #{jwt_with_extra[0..50]}..."
   puts
 
   # 2. Get invitations by target

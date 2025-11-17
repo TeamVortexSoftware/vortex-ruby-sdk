@@ -32,16 +32,15 @@ class VortexController < ActionController::Base
     user_id = session[:user_id] || request.headers['X-User-ID']
     return nil unless user_id
 
-    # Return user data in the format expected by Vortex
+    # Build admin_scopes array
+    admin_scopes = []
+    admin_scopes << 'autoJoin' if session[:user_role] == 'admin'
+
+    # Return user data
     {
-      user_id: user_id,
-      identifiers: [
-        { type: 'email', value: session[:user_email] || 'user@example.com' }
-      ],
-      groups: [
-        { id: 'team1', type: 'team', name: 'Engineering' }
-      ],
-      role: session[:user_role] || 'user'
+      id: user_id,
+      email: session[:user_email] || 'user@example.com',
+      admin_scopes: admin_scopes
     }
   end
 
@@ -56,9 +55,9 @@ class VortexController < ActionController::Base
     when 'ACCEPT_INVITATIONS'
       true # Everyone can accept invitations
     when 'REVOKE_INVITATION', 'DELETE_GROUP_INVITATIONS'
-      user[:role] == 'admin' # Only admins can delete
+      user[:admin_scopes]&.include?('autoJoin') # Only admins can delete
     when 'GET_GROUP_INVITATIONS', 'REINVITE'
-      user[:role] == 'admin' # Only admins can manage groups
+      user[:admin_scopes]&.include?('autoJoin') # Only admins can manage groups
     else
       false
     end
