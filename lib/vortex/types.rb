@@ -66,7 +66,9 @@ module Vortex
       widgetConfigurationId: String,
       projectId: String,
       groups: Array, # of INVITATION_GROUP structures
-      accepts: Array # of acceptance structures
+      accepts: Array, # of acceptance structures
+      expired: :boolean,
+      expires: String # ISO 8601 timestamp (optional)
     }.freeze
   end
 end

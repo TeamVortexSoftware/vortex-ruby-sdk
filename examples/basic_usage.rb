@@ -17,7 +17,7 @@ client = Vortex::Client.new(API_KEY)
 user = {
   id: 'user123',
   email: 'user@example.com',
-  admin_scopes: ['autoJoin']  # Optional - maps to userIsAutoJoinAdmin
+  admin_scopes: ['autoJoin']  # Optional - included as adminScopes array in JWT
 }
 
 # Additional properties (optional)

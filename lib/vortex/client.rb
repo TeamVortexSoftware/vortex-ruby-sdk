@@ -25,25 +25,29 @@ module Vortex
 
     # Generate a JWT token for a user
     #
-    # @param user [Hash] User hash with :id, :email, and optional :admin_scopes
-    # @param extra [Hash, nil] Optional additional properties to include in the JWT payload
+    # @param params [Hash] JWT parameters with :user (required) and optional :attributes
     # @return [String] JWT token
     # @raise [VortexError] If API key is invalid or JWT generation fails
     #
     # @example Simple usage
     #   client = Vortex::Client.new(ENV['VORTEX_API_KEY'])
-    #   user = {
-    #     id: 'user-123',
-    #     email: 'user@example.com',
-    #     admin_scopes: ['autoJoin']
-    #   }
-    #   jwt = client.generate_jwt(user: user)
+    #   jwt = client.generate_jwt({
+    #     user: {
+    #       id: 'user-123',
+    #       email: 'user@example.com',
+    #       admin_scopes: ['autoJoin']
+    #     }
+    #   })
     #
-    # @example With additional properties
-    #   user = { id: 'user-123', email: 'user@example.com' }
-    #   extra = { role: 'admin', department: 'Engineering' }
-    #   jwt = client.generate_jwt(user: user, extra: extra)
-    def generate_jwt(user:, extra: nil)
+    # @example With additional attributes
+    #   jwt = client.generate_jwt({
+    #     user: { id: 'user-123', email: 'user@example.com' },
+    #     attributes: { role: 'admin', department: 'Engineering' }
+    #   })
+    def generate_jwt(params)
+      user = params[:user]
+      attributes = params[:attributes]
+
       # Parse API key - same format as Node.js SDK
       prefix, encoded_id, key = @api_key.split('.')
 
@@ -76,14 +80,14 @@ module Vortex
         expires: expires
       }
 
-      # Add userIsAutoJoinAdmin if 'autoJoin' is in admin_scopes
-      if user[:admin_scopes]&.include?('autoJoin')
-        payload[:userIsAutoJoinAdmin] = true
+      # Add adminScopes if present
+      if user[:admin_scopes]
+        payload[:adminScopes] = user[:admin_scopes]
       end
 
-      # Add any additional properties from extra
-      if extra && !extra.empty?
-        payload.merge!(extra)
+      # Add any additional properties from attributes
+      if attributes && !attributes.empty?
+        payload.merge!(attributes)
       end
 
       # Step 3: Base64URL encode (same as Node.js)

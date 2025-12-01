@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'logger'
 require 'vortex/client'
 require 'vortex/error'
 
@@ -28,6 +29,17 @@ module Vortex
     #       @vortex_client ||= Vortex::Client.new(ENV['VORTEX_API_KEY'])
     #     end
     #   end
+    #
+    # Configure logging:
+    #   Vortex::Rails.logger = MyLogger.new
+    class << self
+      attr_writer :logger
+
+      def logger
+        @logger ||= defined?(::Rails) ? ::Rails.logger : Logger.new(nil)
+      end
+    end
+
     module Controller
       extend ActiveSupport::Concern
 
@@ -39,28 +51,54 @@ module Vortex
       # Generate JWT for authenticated user
       # POST /api/vortex/jwt
       def generate_jwt
+        Vortex::Rails.logger.debug("Vortex::Rails::Controller#generate_jwt invoked")
+
         user = authenticate_vortex_user
         return render_unauthorized('Authentication required') unless user
 
         unless authorize_vortex_operation('JWT', user)
+          Vortex::Rails.logger.warn("Vortex JWT authorization failed for user #{user[:user_id]}")
           return render_forbidden('Not authorized to generate JWT')
         end
 
-        jwt = vortex_client.generate_jwt(
-          user_id: user[:user_id],
-          identifiers: user[:identifiers],
-          groups: user[:groups],
-          role: user[:role]
-        )
+        # Extract email from identifiers for the user hash
+        email = user[:identifiers]&.find { |i| i[:type] == 'email' }&.dig(:value)
 
+        # Build the JWT
+        jwt_params = {
+          user: {
+            id: user[:user_id],
+            email: email
+          }
+        }
+
+        # Add adminScopes if present
+        if user[:admin_scopes]&.any?
+          jwt_params[:user][:admin_scopes] = user[:admin_scopes]
+        end
+
+        # Add attributes if present
+        if user[:attributes]
+          jwt_params[:attributes] = user[:attributes]
+        end
+
+        jwt = vortex_client.generate_jwt(jwt_params)
+
+        Vortex::Rails.logger.debug("Vortex JWT generated successfully for user #{user[:user_id]}")
         render json: { jwt: jwt }
       rescue Vortex::VortexError => e
+        Vortex::Rails.logger.error("Vortex error generating JWT: #{e.message}")
         render_server_error("Failed to generate JWT: #{e.message}")
+      rescue StandardError => e
+        Vortex::Rails.logger.error("Unexpected error generating JWT: #{e.class} - #{e.message}")
+        render_server_error("Unexpected error: #{e.message}")
       end
 
       # Get invitations by target
       # GET /api/vortex/invitations?targetType=email&targetValue=user@example.com
       def get_invitations_by_target
+        Vortex::Rails.logger.debug("Vortex::Rails::Controller#get_invitations_by_target invoked")
+
         user = authenticate_vortex_user
         return render_unauthorized('Authentication required') unless user
 
@@ -82,6 +120,8 @@ module Vortex
       # Get specific invitation by ID
       # GET /api/vortex/invitations/:invitation_id
       def get_invitation
+        Vortex::Rails.logger.debug("Vortex::Rails::Controller#get_invitation invoked")
+
         user = authenticate_vortex_user
         return render_unauthorized('Authentication required') unless user
 
@@ -99,6 +139,8 @@ module Vortex
       # Revoke (delete) invitation
       # DELETE /api/vortex/invitations/:invitation_id
       def revoke_invitation
+        Vortex::Rails.logger.debug("Vortex::Rails::Controller#revoke_invitation invoked")
+
         user = authenticate_vortex_user
         return render_unauthorized('Authentication required') unless user
 
@@ -116,6 +158,8 @@ module Vortex
       # Accept invitations
       # POST /api/vortex/invitations/accept
       def accept_invitations
+        Vortex::Rails.logger.debug("Vortex::Rails::Controller#accept_invitations invoked")
+
         user = authenticate_vortex_user
         return render_unauthorized('Authentication required') unless user
 
@@ -139,6 +183,8 @@ module Vortex
       # Get invitations by group
       # GET /api/vortex/invitations/by-group/:group_type/:group_id
       def get_invitations_by_group
+        Vortex::Rails.logger.debug("Vortex::Rails::Controller#get_invitations_by_group invoked")
+
         user = authenticate_vortex_user
         return render_unauthorized('Authentication required') unless user
 
@@ -158,6 +204,8 @@ module Vortex
       # Delete invitations by group
       # DELETE /api/vortex/invitations/by-group/:group_type/:group_id
       def delete_invitations_by_group
+        Vortex::Rails.logger.debug("Vortex::Rails::Controller#delete_invitations_by_group invoked")
+
         user = authenticate_vortex_user
         return render_unauthorized('Authentication required') unless user
 
@@ -177,6 +225,8 @@ module Vortex
       # Reinvite user
       # POST /api/vortex/invitations/:invitation_id/reinvite
       def reinvite
+        Vortex::Rails.logger.debug("Vortex::Rails::Controller#reinvite invoked")
+
         user = authenticate_vortex_user
         return render_unauthorized('Authentication required') unless user
 
@@ -228,7 +278,6 @@ module Vortex
       end
 
       def handle_vortex_error(error)
-        Rails.logger.error("Vortex error: #{error.message}")
         render_server_error(error.message)
       end
     end

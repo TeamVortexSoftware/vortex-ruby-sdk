@@ -5,7 +5,7 @@ A Ruby SDK for the Vortex invitation system, providing seamless integration with
 ## Features
 
 - **JWT Generation**: Identical algorithm to other SDKs for complete compatibility
-- **Simplified JWT Format**: New streamlined payload with `userEmail` and `userIsAutoJoinAdmin`
+- **Simplified JWT Format**: New streamlined payload with `userEmail` and `adminScopes`
 - **Backward Compatible**: Legacy JWT format still supported
 - **Complete API Coverage**: All invitation management operations
 - **Framework Integration**: Built-in Rails and Sinatra helpers
@@ -45,7 +45,7 @@ client = Vortex::Client.new(ENV['VORTEX_API_KEY'])
 user = {
   id: 'user-123',
   email: 'user@example.com',
-  admin_scopes: ['autoJoin']  # Optional - maps to userIsAutoJoinAdmin
+  admin_scopes: ['autoJoin']  # Optional - included as adminScopes array in JWT
 }
 
 # Generate JWT
@@ -206,7 +206,7 @@ The SDK generates JWTs with the following payload structure:
 {
   userId: 'user-123',
   userEmail: 'user@example.com',
-  userIsAutoJoinAdmin: true,  # Only included if 'autoJoin' is in admin_scopes
+  adminScopes: ['autoJoin'],  # Full array included if admin_scopes provided
   expires: 1234567890
 }
 ```
