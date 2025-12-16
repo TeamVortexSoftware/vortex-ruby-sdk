@@ -15,10 +15,14 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  # Configure WebMock
-  config.before(:each) do
+  # Configure WebMock - allow real HTTP for integration tests
+  config.before(:each) do |example|
     WebMock.reset!
-    WebMock.disable_net_connect!(allow_localhost: false)
+    if example.metadata[:integration]
+      WebMock.allow_net_connect!
+    else
+      WebMock.disable_net_connect!(allow_localhost: false)
+    end
   end
 
   # Test helpers

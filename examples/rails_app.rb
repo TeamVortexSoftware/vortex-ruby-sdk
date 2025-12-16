@@ -34,7 +34,7 @@ class VortexController < ActionController::Base
 
     # Build admin_scopes array
     admin_scopes = []
-    admin_scopes << 'autoJoin' if session[:user_role] == 'admin'
+    admin_scopes << 'autojoin' if session[:user_role] == 'admin'
 
     # Return user data
     {
@@ -55,9 +55,9 @@ class VortexController < ActionController::Base
     when 'ACCEPT_INVITATIONS'
       true # Everyone can accept invitations
     when 'REVOKE_INVITATION', 'DELETE_GROUP_INVITATIONS'
-      user[:admin_scopes]&.include?('autoJoin') # Only admins can delete
+      user[:admin_scopes]&.include?('autojoin') # Only admins can delete
     when 'GET_GROUP_INVITATIONS', 'REINVITE'
-      user[:admin_scopes]&.include?('autoJoin') # Only admins can manage groups
+      user[:admin_scopes]&.include?('autojoin') # Only admins can manage groups
     else
       false
     end

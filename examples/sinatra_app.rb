@@ -27,7 +27,7 @@ class VortexSinatraApp < Sinatra::Base
 
     # Build admin_scopes array
     admin_scopes = []
-    admin_scopes << 'autoJoin' if request.env['HTTP_X_USER_ROLE'] == 'admin'
+    admin_scopes << 'autojoin' if request.env['HTTP_X_USER_ROLE'] == 'admin'
 
     # Return user data
     {
@@ -47,9 +47,9 @@ class VortexSinatraApp < Sinatra::Base
     when 'ACCEPT_INVITATIONS'
       true # Everyone can accept invitations
     when 'REVOKE_INVITATION', 'DELETE_GROUP_INVITATIONS'
-      user[:admin_scopes]&.include?('autoJoin') # Only admins can delete
+      user[:admin_scopes]&.include?('autojoin') # Only admins can delete
     when 'GET_GROUP_INVITATIONS', 'REINVITE'
-      user[:admin_scopes]&.include?('autoJoin') # Only admins can manage groups
+      user[:admin_scopes]&.include?('autojoin') # Only admins can manage groups
     else
       false
     end

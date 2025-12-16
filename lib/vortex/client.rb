@@ -35,7 +35,7 @@ module Vortex
     #     user: {
     #       id: 'user-123',
     #       email: 'user@example.com',
-    #       admin_scopes: ['autoJoin']
+    #       admin_scopes: ['autojoin']
     #     }
     #   })
     #

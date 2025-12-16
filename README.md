@@ -45,7 +45,7 @@ client = Vortex::Client.new(ENV['VORTEX_API_KEY'])
 user = {
   id: 'user-123',
   email: 'user@example.com',
-  admin_scopes: ['autoJoin']  # Optional - included as adminScopes array in JWT
+  admin_scopes: ['autojoin']  # Optional - included as adminScopes array in JWT
 }
 
 # Generate JWT
@@ -91,7 +91,7 @@ class VortexController < ApplicationController
   def authenticate_vortex_user
     # Return user data hash or nil
     admin_scopes = []
-    admin_scopes << 'autoJoin' if current_user.admin?
+    admin_scopes << 'autojoin' if current_user.admin?
 
     {
       id: current_user.id,
@@ -106,7 +106,7 @@ class VortexController < ApplicationController
     when 'JWT', 'GET_INVITATIONS'
       true
     when 'REVOKE_INVITATION'
-      user[:admin_scopes]&.include?('autoJoin')
+      user[:admin_scopes]&.include?('autojoin')
     else
       false
     end
@@ -172,11 +172,13 @@ end
 All methods match the functionality of other Vortex SDKs:
 
 ### JWT Generation
+
 - `generate_jwt(user:, extra: nil)` - Generate JWT token
   - `user`: Hash with `:id`, `:email`, and optional `:admin_scopes` array
   - `extra`: Optional hash with additional properties to include in JWT payload
 
 ### Invitation Management
+
 - `get_invitations_by_target(target_type, target_value)` - Get invitations by target
 - `get_invitation(invitation_id)` - Get specific invitation
 - `revoke_invitation(invitation_id)` - Revoke invitation
@@ -206,7 +208,7 @@ The SDK generates JWTs with the following payload structure:
 {
   userId: 'user-123',
   userEmail: 'user@example.com',
-  adminScopes: ['autoJoin'],  # Full array included if admin_scopes provided
+  adminScopes: ['autojoin'],  # Full array included if admin_scopes provided
   expires: 1234567890
 }
 ```
