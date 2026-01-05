@@ -76,7 +76,7 @@ Create or update `CHANGELOG.md` with release notes:
 ### Step 4: Install Dependencies and Test
 
 ```bash
-cd packages/vortex-ruby-sdk
+cd sdks/vortex-ruby-sdk
 
 # Install dependencies
 bundle install
@@ -182,29 +182,29 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd packages/vortex-ruby-sdk
+          cd sdks/vortex-ruby-sdk
           bundle install
 
       - name: Run tests
         run: |
-          cd packages/vortex-ruby-sdk
+          cd sdks/vortex-ruby-sdk
           bundle exec rspec
 
       - name: Run RuboCop
         run: |
-          cd packages/vortex-ruby-sdk
+          cd sdks/vortex-ruby-sdk
           bundle exec rubocop
 
       - name: Build gem
         run: |
-          cd packages/vortex-ruby-sdk
+          cd sdks/vortex-ruby-sdk
           gem build vortex-ruby-sdk.gemspec
 
       - name: Publish to RubyGems
         env:
           GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
         run: |
-          cd packages/vortex-ruby-sdk
+          cd sdks/vortex-ruby-sdk
           gem push *.gem
 ```
 

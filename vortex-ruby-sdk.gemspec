@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name = 'vortex-ruby-sdk'
   spec.version = Vortex::VERSION
   spec.authors = ['Vortex Software']
-  spec.email = ['support@vortexsoftware.io']
+  spec.email = ['support@vortexsoftware.com']
 
   spec.summary = 'Ruby SDK for Vortex invitation system'
   spec.description = 'A Ruby SDK that provides seamless integration with the Vortex invitation system, including JWT generation and invitation management.'

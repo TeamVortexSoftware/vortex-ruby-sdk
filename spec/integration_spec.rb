@@ -85,6 +85,7 @@ RSpec.describe 'Integration Test', :integration do
     component_id = ENV['TEST_INTEGRATION_SDKS_VORTEX_COMPONENT_ID'] || raise(StandardError, 'Missing required environment variable: TEST_INTEGRATION_SDKS_VORTEX_COMPONENT_ID')
     widget_uri = URI("#{client_api_url}/api/v1/widgets/#{component_id}?templateVariables=lzstr:N4Ig5gTg9grgDgfQHYEMC2BTEAuEBlAEQGkACAFQwGcAXEgcWnhABoQBLJANzeowmXRZcBCCQBqUCLwAeLcI0SY0AIz4IAxrCTUcIAMxzNaOCiQBPAZl0SpGaSQCSSdQDoQAXyA")
     widget_http = Net::HTTP.new(widget_uri.host, widget_uri.port)
+    widget_http.use_ssl = (widget_uri.scheme == 'https')
     widget_request = Net::HTTP::Get.new(widget_uri.request_uri, {
       'Content-Type' => 'application/json',
       'Authorization' => "Bearer #{jwt}",
@@ -138,6 +139,7 @@ RSpec.describe 'Integration Test', :integration do
     }
 
     http = Net::HTTP.new(invitation_uri.host, invitation_uri.port)
+    http.use_ssl = (invitation_uri.scheme == 'https')
     request = Net::HTTP::Post.new(invitation_uri.path, headers)
     request.body = data.to_json
 

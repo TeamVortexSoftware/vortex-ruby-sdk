@@ -146,16 +146,84 @@ module Vortex
       raise VortexError, "Failed to revoke invitation: #{e.message}"
     end
 
-    # Accept invitations
+    # Accept invitations using the new User format (preferred)
+    #
+    # Supports three formats:
+    # 1. User hash (preferred): { email: '...', phone: '...', name: '...' }
+    # 2. Target hash (deprecated): { type: 'email', value: '...' }
+    # 3. Array of targets (deprecated): [{ type: 'email', value: '...' }, ...]
     #
     # @param invitation_ids [Array<String>] List of invitation IDs to accept
-    # @param target [Hash] Target hash with :type and :value
+    # @param user_or_target [Hash, Array] User hash with :email/:phone/:name keys, OR legacy target(s)
     # @return [Hash] The accepted invitation result
     # @raise [VortexError] If the request fails
-    def accept_invitations(invitation_ids, target)
+    #
+    # @example New format (preferred)
+    #   user = { email: 'user@example.com', name: 'John Doe' }
+    #   result = client.accept_invitations(['inv-123'], user)
+    #
+    # @example Legacy format (deprecated)
+    #   target = { type: 'email', value: 'user@example.com' }
+    #   result = client.accept_invitations(['inv-123'], target)
+    def accept_invitations(invitation_ids, user_or_target)
+      # Check if it's an array of targets (legacy format with multiple targets)
+      if user_or_target.is_a?(Array)
+        warn '[Vortex SDK] DEPRECATED: Passing an array of targets is deprecated. ' \
+             'Use the User format instead: accept_invitations(invitation_ids, { email: "user@example.com" })'
+
+        raise VortexError, 'No targets provided' if user_or_target.empty?
+
+        last_result = nil
+        last_exception = nil
+
+        user_or_target.each do |target|
+          begin
+            last_result = accept_invitations(invitation_ids, target)
+          rescue => e
+            last_exception = e
+          end
+        end
+
+        raise last_exception if last_exception
+
+        return last_result || {}
+      end
+
+      # Check if it's a legacy target format (has :type and :value keys)
+      is_legacy_target = user_or_target.key?(:type) && user_or_target.key?(:value)
+
+      if is_legacy_target
+        warn '[Vortex SDK] DEPRECATED: Passing a target hash is deprecated. ' \
+             'Use the User format instead: accept_invitations(invitation_ids, { email: "user@example.com" })'
+
+        # Convert target to User format
+        target_type = user_or_target[:type]
+        target_value = user_or_target[:value]
+
+        user = {}
+        case target_type
+        when 'email'
+          user[:email] = target_value
+        when 'sms', 'phoneNumber'
+          user[:phone] = target_value
+        else
+          # For other types, try to use as email
+          user[:email] = target_value
+        end
+
+        # Recursively call with User format
+        return accept_invitations(invitation_ids, user)
+      end
+
+      # New User format
+      user = user_or_target
+
+      # Validate that either email or phone is provided
+      raise VortexError, 'User must have either email or phone' if user[:email].nil? && user[:phone].nil?
+
       body = {
         invitationIds: invitation_ids,
-        target: target
+        user: user.compact # Remove nil values
       }
 
       response = @connection.post('/api/v1/invitations/accept') do |req|
@@ -164,6 +232,8 @@ module Vortex
       end
 
       handle_response(response)
+    rescue VortexError
+      raise
     rescue => e
       raise VortexError, "Failed to accept invitations: #{e.message}"
     end

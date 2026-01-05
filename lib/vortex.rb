@@ -2,6 +2,7 @@
 
 require 'vortex/version'
 require 'vortex/error'
+require 'vortex/types'
 require 'vortex/client'
 
 # Vortex Ruby SDK

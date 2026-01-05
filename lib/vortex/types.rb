@@ -39,6 +39,19 @@ module Vortex
       createdAt: String    # ISO 8601 timestamp when the group was created
     }.freeze
 
+    # AcceptUser structure for accepting invitations (new format - preferred)
+    # @example
+    #   {
+    #     email: 'user@example.com',
+    #     phone: '+1234567890',      # Optional
+    #     name: 'John Doe'           # Optional
+    #   }
+    ACCEPT_USER = {
+      email: String,  # Optional but either email or phone must be provided
+      phone: String,  # Optional but either email or phone must be provided
+      name: String    # Optional
+    }.freeze
+
     # Invitation structure from API responses
     # @example
     #   {
