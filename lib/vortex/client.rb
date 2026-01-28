@@ -80,6 +80,16 @@ module Vortex
         expires: expires
       }
 
+      # Add name if present (convert snake_case to camelCase for JWT)
+      if user[:name]
+        payload[:name] = user[:name]
+      end
+
+      # Add avatarUrl if present (convert snake_case to camelCase for JWT)
+      if user[:avatar_url]
+        payload[:avatarUrl] = user[:avatar_url]
+      end
+
       # Add adminScopes if present
       if user[:admin_scopes]
         payload[:adminScopes] = user[:admin_scopes]
@@ -204,7 +214,7 @@ module Vortex
         case target_type
         when 'email'
           user[:email] = target_value
-        when 'sms', 'phoneNumber'
+        when 'phone', 'phoneNumber'
           user[:phone] = target_value
         else
           # For other types, try to use as email
@@ -275,6 +285,86 @@ module Vortex
       handle_response(response)
     rescue => e
       raise VortexError, "Failed to reinvite: #{e.message}"
+    end
+
+    # Create an invitation from your backend
+    #
+    # This method allows you to create invitations programmatically using your API key,
+    # without requiring a user JWT token. Useful for server-side invitation creation,
+    # such as "People You May Know" flows or admin-initiated invitations.
+    #
+    # Target types:
+    # - 'email': Send an email invitation
+    # - 'phone': Create a phone invitation (short link returned for you to send)
+    # - 'internal': Create an internal invitation for PYMK flows (no email sent)
+    #
+    # @param widget_configuration_id [String] The widget configuration ID to use
+    # @param target [Hash] The invitation target: { type: 'email|sms|internal', value: '...' }
+    # @param inviter [Hash] The inviter info: { user_id: '...', user_email: '...', name: '...' }
+    # @param groups [Array<Hash>, nil] Optional groups: [{ type: '...', group_id: '...', name: '...' }]
+    # @param source [String, nil] Optional source for analytics (defaults to 'api')
+    # @param template_variables [Hash, nil] Optional template variables for email customization
+    # @param metadata [Hash, nil] Optional metadata passed through to webhooks
+    # @return [Hash] Created invitation with :id, :short_link, :status, :created_at
+    # @raise [VortexError] If the request fails
+    #
+    # @example Create an email invitation
+    #   result = client.create_invitation(
+    #     'widget-config-123',
+    #     { type: 'email', value: 'invitee@example.com' },
+    #     { user_id: 'user-456', user_email: 'inviter@example.com', name: 'John Doe' },
+    #     [{ type: 'team', group_id: 'team-789', name: 'Engineering' }]
+    #   )
+    #
+    # @example Create an internal invitation (PYMK flow - no email sent)
+    #   result = client.create_invitation(
+    #     'widget-config-123',
+    #     { type: 'internal', value: 'internal-user-abc' },
+    #     { user_id: 'user-456' },
+    #     nil,
+    #     'pymk'
+    #   )
+    def create_invitation(widget_configuration_id, target, inviter, groups = nil, source = nil, template_variables = nil, metadata = nil)
+      raise VortexError, 'widget_configuration_id is required' if widget_configuration_id.nil? || widget_configuration_id.empty?
+      raise VortexError, 'target must have type and value' if target[:type].nil? || target[:value].nil?
+      raise VortexError, 'inviter must have user_id' if inviter[:user_id].nil?
+
+      # Build request body with camelCase keys for the API
+      body = {
+        widgetConfigurationId: widget_configuration_id,
+        target: target,
+        inviter: {
+          userId: inviter[:user_id],
+          userEmail: inviter[:user_email],
+          name: inviter[:name],
+          avatarUrl: inviter[:avatar_url]
+        }.compact
+      }
+
+      if groups && !groups.empty?
+        body[:groups] = groups.map do |g|
+          {
+            type: g[:type],
+            groupId: g[:group_id],
+            name: g[:name]
+          }
+        end
+      end
+
+      body[:source] = source if source
+      body[:templateVariables] = template_variables if template_variables
+      body[:metadata] = metadata if metadata
+
+      response = @connection.post('/api/v1/invitations') do |req|
+        req.headers['Content-Type'] = 'application/json'
+        req.body = JSON.generate(body)
+      end
+
+      handle_response(response)
+    rescue VortexError
+      raise
+    rescue => e
+      raise VortexError, "Failed to create invitation: #{e.message}"
     end
 
     private

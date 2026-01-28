@@ -12,6 +12,8 @@ A Ruby SDK for the Vortex invitation system, providing seamless integration with
 - **Same Route Structure**: Ensures React provider compatibility
 - **Comprehensive Testing**: Full test coverage with RSpec
 - **Type Safety**: Clear method signatures and documentation
+- **Multiple Delivery Types**: Support for `email`, `phone`, `share`, and `internal` invitation delivery
+  - `internal` invitations allow for customer-managed, in-app invitation flows with no external communication
 
 ## Installation
 

@@ -69,7 +69,7 @@ module Vortex
       createdAt: String,
       deactivated: :boolean,
       deliveryCount: Integer,
-      deliveryTypes: Array, # of String
+      deliveryTypes: Array, # of String - valid values: "email", "phone", "share", "internal"
       foreignCreatorId: String,
       invitationType: String,
       modifiedAt: String,
