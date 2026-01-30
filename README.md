@@ -47,7 +47,9 @@ client = Vortex::Client.new(ENV['VORTEX_API_KEY'])
 user = {
   id: 'user-123',
   email: 'user@example.com',
-  admin_scopes: ['autojoin']  # Optional - included as adminScopes array in JWT
+  user_name: 'Jane Doe',                                    # Optional: user's display name
+  user_avatar_url: 'https://example.com/avatars/jane.jpg',  # Optional: user's avatar URL
+  admin_scopes: ['autojoin']                                # Optional: grants autojoin admin privileges
 }
 
 # Generate JWT
@@ -61,22 +63,6 @@ client.accept_invitations(['inv1', 'inv2'], { type: 'email', value: 'user@exampl
 
 # Get invitations by group
 group_invitations = client.get_invitations_by_group('team', 'team1')
-```
-
-### Generate JWT with Additional Properties
-
-```ruby
-user = {
-  id: 'user-123',
-  email: 'user@example.com'
-}
-
-extra = {
-  role: 'admin',
-  department: 'Engineering'
-}
-
-jwt = client.generate_jwt(user: user, extra: extra)
 ```
 
 ## Rails Integration

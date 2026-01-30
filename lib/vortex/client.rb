@@ -81,13 +81,13 @@ module Vortex
       }
 
       # Add name if present (convert snake_case to camelCase for JWT)
-      if user[:name]
-        payload[:name] = user[:name]
+      if user[:user_name]
+        payload[:userName] = user[:user_name]
       end
 
-      # Add avatarUrl if present (convert snake_case to camelCase for JWT)
-      if user[:avatar_url]
-        payload[:avatarUrl] = user[:avatar_url]
+      # Add userAvatarUrl if present (convert snake_case to camelCase for JWT)
+      if user[:user_avatar_url]
+        payload[:userAvatarUrl] = user[:user_avatar_url]
       end
 
       # Add adminScopes if present
@@ -336,8 +336,8 @@ module Vortex
         inviter: {
           userId: inviter[:user_id],
           userEmail: inviter[:user_email],
-          name: inviter[:name],
-          avatarUrl: inviter[:avatar_url]
+          userName: inviter[:user_name],
+          userAvatarUrl: inviter[:user_avatar_url]
         }.compact
       }
 
