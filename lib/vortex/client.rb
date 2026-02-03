@@ -305,15 +305,20 @@ module Vortex
     # @param source [String, nil] Optional source for analytics (defaults to 'api')
     # @param template_variables [Hash, nil] Optional template variables for email customization
     # @param metadata [Hash, nil] Optional metadata passed through to webhooks
+    # @param unfurl_config [Hash, nil] Optional link unfurl (Open Graph) config: { title: '...', description: '...', image: '...', type: '...', site_name: '...' }
     # @return [Hash] Created invitation with :id, :short_link, :status, :created_at
     # @raise [VortexError] If the request fails
     #
-    # @example Create an email invitation
+    # @example Create an email invitation with custom link preview
     #   result = client.create_invitation(
     #     'widget-config-123',
     #     { type: 'email', value: 'invitee@example.com' },
     #     { user_id: 'user-456', user_email: 'inviter@example.com', name: 'John Doe' },
-    #     [{ type: 'team', group_id: 'team-789', name: 'Engineering' }]
+    #     [{ type: 'team', group_id: 'team-789', name: 'Engineering' }],
+    #     nil,
+    #     nil,
+    #     nil,
+    #     { title: 'Join the team!', description: 'You have been invited', image: 'https://example.com/og.png' }
     #   )
     #
     # @example Create an internal invitation (PYMK flow - no email sent)
@@ -324,7 +329,7 @@ module Vortex
     #     nil,
     #     'pymk'
     #   )
-    def create_invitation(widget_configuration_id, target, inviter, groups = nil, source = nil, template_variables = nil, metadata = nil)
+    def create_invitation(widget_configuration_id, target, inviter, groups = nil, source = nil, template_variables = nil, metadata = nil, unfurl_config = nil)
       raise VortexError, 'widget_configuration_id is required' if widget_configuration_id.nil? || widget_configuration_id.empty?
       raise VortexError, 'target must have type and value' if target[:type].nil? || target[:value].nil?
       raise VortexError, 'inviter must have user_id' if inviter[:user_id].nil?
@@ -354,6 +359,15 @@ module Vortex
       body[:source] = source if source
       body[:templateVariables] = template_variables if template_variables
       body[:metadata] = metadata if metadata
+      if unfurl_config
+        body[:unfurlConfig] = {
+          title: unfurl_config[:title],
+          description: unfurl_config[:description],
+          image: unfurl_config[:image],
+          type: unfurl_config[:type],
+          siteName: unfurl_config[:site_name]
+        }.compact
+      end
 
       response = @connection.post('/api/v1/invitations') do |req|
         req.headers['Content-Type'] = 'application/json'
