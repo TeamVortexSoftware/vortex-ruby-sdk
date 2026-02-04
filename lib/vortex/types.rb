@@ -60,6 +60,21 @@ module Vortex
     #     groups: [INVITATION_GROUP, ...],
     #     # ... other fields
     #   }
+    # InvitationTarget represents the target of an invitation
+    # @example
+    #   {
+    #     type: 'email',         # 'email', 'phone', 'share', or 'internal'
+    #     value: 'user@example.com',
+    #     name: 'Jane Smith',    # Optional: Display name of the person being invited
+    #     avatarUrl: 'https://...' # Optional: Avatar URL for display in invitation lists
+    #   }
+    INVITATION_TARGET = {
+      type: String,       # Required: 'email', 'phone', 'share', or 'internal'
+      value: String,      # Required: Email, phone, or internal ID
+      name: String,       # Optional: Display name of the person being invited
+      avatarUrl: String   # Optional: Avatar URL for the person being invited
+    }.freeze
+
     INVITATION = {
       id: String,
       accountId: String,
@@ -74,7 +89,7 @@ module Vortex
       invitationType: String,
       modifiedAt: String,
       status: String,
-      target: Array, # of { type: String, value: String }
+      target: Array, # of INVITATION_TARGET structures
       views: Integer,
       widgetConfigurationId: String,
       projectId: String,
@@ -82,6 +97,21 @@ module Vortex
       accepts: Array, # of acceptance structures
       expired: :boolean,
       expires: String # ISO 8601 timestamp (optional)
+    }.freeze
+
+    # CreateInvitationTarget for creating invitations
+    # @example
+    #   {
+    #     type: 'email',
+    #     value: 'invitee@example.com',
+    #     name: 'Jane Smith',       # Optional
+    #     avatarUrl: 'https://...'  # Optional
+    #   }
+    CREATE_INVITATION_TARGET = {
+      type: String,       # Required: 'email', 'phone', or 'internal'
+      value: String,      # Required: Email, phone, or internal ID
+      name: String,       # Optional: Display name of the person being invited
+      avatarUrl: String   # Optional: Avatar URL for the person being invited
     }.freeze
   end
 end

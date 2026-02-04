@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module Vortex
-  VERSION = '1.3.0'
+  VERSION = '1.5.0'
 end

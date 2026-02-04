@@ -303,6 +303,7 @@ module Vortex
     # @param inviter [Hash] The inviter info: { user_id: '...', user_email: '...', name: '...' }
     # @param groups [Array<Hash>, nil] Optional groups: [{ type: '...', group_id: '...', name: '...' }]
     # @param source [String, nil] Optional source for analytics (defaults to 'api')
+    # @param subtype [String, nil] Optional subtype for analytics segmentation (e.g., 'pymk', 'find-friends')
     # @param template_variables [Hash, nil] Optional template variables for email customization
     # @param metadata [Hash, nil] Optional metadata passed through to webhooks
     # @param unfurl_config [Hash, nil] Optional link unfurl (Open Graph) config: { title: '...', description: '...', image: '...', type: '...', site_name: '...' }
@@ -329,7 +330,7 @@ module Vortex
     #     nil,
     #     'pymk'
     #   )
-    def create_invitation(widget_configuration_id, target, inviter, groups = nil, source = nil, template_variables = nil, metadata = nil, unfurl_config = nil)
+    def create_invitation(widget_configuration_id, target, inviter, groups = nil, source = nil, subtype = nil, template_variables = nil, metadata = nil, unfurl_config = nil)
       raise VortexError, 'widget_configuration_id is required' if widget_configuration_id.nil? || widget_configuration_id.empty?
       raise VortexError, 'target must have type and value' if target[:type].nil? || target[:value].nil?
       raise VortexError, 'inviter must have user_id' if inviter[:user_id].nil?
@@ -357,6 +358,7 @@ module Vortex
       end
 
       body[:source] = source if source
+      body[:subtype] = subtype if subtype
       body[:templateVariables] = template_variables if template_variables
       body[:metadata] = metadata if metadata
       if unfurl_config
