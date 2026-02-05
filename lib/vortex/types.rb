@@ -113,5 +113,46 @@ module Vortex
       name: String,       # Optional: Display name of the person being invited
       avatarUrl: String   # Optional: Avatar URL for the person being invited
     }.freeze
+
+    # AutojoinDomain structure for autojoin domain configuration
+    # @example
+    #   {
+    #     id: '550e8400-e29b-41d4-a716-446655440000',
+    #     domain: 'acme.com'
+    #   }
+    AUTOJOIN_DOMAIN = {
+      id: String,     # Vortex internal UUID
+      domain: String  # The domain configured for autojoin
+    }.freeze
+
+    # AutojoinDomainsResponse from autojoin API endpoints
+    # @example
+    #   {
+    #     autojoinDomains: [AUTOJOIN_DOMAIN, ...],
+    #     invitation: INVITATION  # or nil
+    #   }
+    AUTOJOIN_DOMAINS_RESPONSE = {
+      autojoinDomains: Array,  # Array of AUTOJOIN_DOMAIN structures
+      invitation: Hash         # INVITATION structure or nil
+    }.freeze
+
+    # ConfigureAutojoinRequest for configuring autojoin domains
+    # @example
+    #   {
+    #     scope: 'acme-org',
+    #     scopeType: 'organization',
+    #     scopeName: 'Acme Corporation',  # Optional
+    #     domains: ['acme.com', 'acme.org'],
+    #     widgetId: 'widget-123',
+    #     metadata: { ... }  # Optional
+    #   }
+    CONFIGURE_AUTOJOIN_REQUEST = {
+      scope: String,       # Required: Customer's group ID
+      scopeType: String,   # Required: Type of scope (e.g., "organization", "team")
+      scopeName: String,   # Optional: Display name for the scope
+      domains: Array,      # Required: Array of domain strings
+      widgetId: String,    # Required: Widget configuration ID
+      metadata: Hash       # Optional: Metadata to attach to the invitation
+    }.freeze
   end
 end

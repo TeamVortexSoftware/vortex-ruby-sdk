@@ -383,6 +383,81 @@ module Vortex
       raise VortexError, "Failed to create invitation: #{e.message}"
     end
 
+    # Get autojoin domains configured for a specific scope
+    #
+    # @param scope_type [String] The type of scope (e.g., "organization", "team", "project")
+    # @param scope [String] The scope identifier (customer's group ID)
+    # @return [Hash] Response with :autojoin_domains array and :invitation
+    # @raise [VortexError] If the request fails
+    #
+    # @example
+    #   result = client.get_autojoin_domains('organization', 'acme-org')
+    #   result['autojoinDomains'].each do |domain|
+    #     puts "Domain: #{domain['domain']}"
+    #   end
+    def get_autojoin_domains(scope_type, scope)
+      encoded_scope_type = URI.encode_www_form_component(scope_type)
+      encoded_scope = URI.encode_www_form_component(scope)
+
+      response = @connection.get("/api/v1/invitations/by-scope/#{encoded_scope_type}/#{encoded_scope}/autojoin")
+      handle_response(response)
+    rescue VortexError
+      raise
+    rescue => e
+      raise VortexError, "Failed to get autojoin domains: #{e.message}"
+    end
+
+    # Configure autojoin domains for a specific scope
+    #
+    # This endpoint syncs autojoin domains - it will add new domains, remove domains
+    # not in the provided list, and deactivate the autojoin invitation if all domains
+    # are removed (empty array).
+    #
+    # @param scope [String] The scope identifier (customer's group ID)
+    # @param scope_type [String] The type of scope (e.g., "organization", "team")
+    # @param domains [Array<String>] Array of domains to configure for autojoin
+    # @param widget_id [String] The widget configuration ID
+    # @param scope_name [String, nil] Optional display name for the scope
+    # @param metadata [Hash, nil] Optional metadata to attach to the invitation
+    # @return [Hash] Response with :autojoin_domains array and :invitation
+    # @raise [VortexError] If the request fails
+    #
+    # @example
+    #   result = client.configure_autojoin(
+    #     'acme-org',
+    #     'organization',
+    #     ['acme.com', 'acme.org'],
+    #     'widget-123',
+    #     'Acme Corporation'
+    #   )
+    def configure_autojoin(scope, scope_type, domains, widget_id, scope_name = nil, metadata = nil)
+      raise VortexError, 'scope is required' if scope.nil? || scope.empty?
+      raise VortexError, 'scope_type is required' if scope_type.nil? || scope_type.empty?
+      raise VortexError, 'widget_id is required' if widget_id.nil? || widget_id.empty?
+      raise VortexError, 'domains must be an array' unless domains.is_a?(Array)
+
+      body = {
+        scope: scope,
+        scopeType: scope_type,
+        domains: domains,
+        widgetId: widget_id
+      }
+
+      body[:scopeName] = scope_name if scope_name
+      body[:metadata] = metadata if metadata
+
+      response = @connection.post('/api/v1/invitations/autojoin') do |req|
+        req.headers['Content-Type'] = 'application/json'
+        req.body = JSON.generate(body)
+      end
+
+      handle_response(response)
+    rescue VortexError
+      raise
+    rescue => e
+      raise VortexError, "Failed to configure autojoin: #{e.message}"
+    end
+
     private
 
     def build_connection
