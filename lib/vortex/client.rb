@@ -95,6 +95,11 @@ module Vortex
         payload[:adminScopes] = user[:admin_scopes]
       end
 
+      # Add allowedEmailDomains if present (for domain-restricted invitations)
+      if user[:allowed_email_domains] && !user[:allowed_email_domains].empty?
+        payload[:allowedEmailDomains] = user[:allowed_email_domains]
+      end
+
       # Add any additional properties from attributes
       if attributes && !attributes.empty?
         payload.merge!(attributes)
@@ -246,6 +251,22 @@ module Vortex
       raise
     rescue => e
       raise VortexError, "Failed to accept invitations: #{e.message}"
+    end
+
+    # Accept a single invitation (recommended method)
+    #
+    # This is the recommended method for accepting invitations.
+    #
+    # @param invitation_id [String] Single invitation ID to accept
+    # @param user [Hash] User hash with :email and/or :phone
+    # @return [Hash] The accepted invitation result
+    # @raise [VortexError] If the request fails
+    #
+    # @example
+    #   user = { email: 'user@example.com', name: 'John Doe' }
+    #   result = client.accept_invitation('inv-123', user)
+    def accept_invitation(invitation_id, user)
+      accept_invitations([invitation_id], user)
     end
 
     # Get invitations by group

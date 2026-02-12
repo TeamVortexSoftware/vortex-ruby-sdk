@@ -58,8 +58,8 @@ jwt = client.generate_jwt(user: user)
 # Get invitations by target
 invitations = client.get_invitations_by_target('email', 'user@example.com')
 
-# Accept invitations
-client.accept_invitations(['inv1', 'inv2'], { type: 'email', value: 'user@example.com' })
+# Accept an invitation
+client.accept_invitation('inv-123', { email: 'user@example.com' })
 
 # Get invitations by group
 group_invitations = client.get_invitations_by_group('team', 'team1')
@@ -170,7 +170,7 @@ All methods match the functionality of other Vortex SDKs:
 - `get_invitations_by_target(target_type, target_value)` - Get invitations by target
 - `get_invitation(invitation_id)` - Get specific invitation
 - `revoke_invitation(invitation_id)` - Revoke invitation
-- `accept_invitations(invitation_ids, target)` - Accept invitations
+- `accept_invitation(invitation_id, user)` - Accept an invitation
 - `get_invitations_by_group(group_type, group_id)` - Get group invitations
 - `delete_invitations_by_group(group_type, group_id)` - Delete group invitations
 - `reinvite(invitation_id)` - Reinvite user
