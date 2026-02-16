@@ -490,6 +490,8 @@ module Vortex
         # Add API key header (same as Node.js SDK)
         conn.headers['x-api-key'] = @api_key
         conn.headers['User-Agent'] = "vortex-ruby-sdk/#{Vortex::VERSION}"
+        conn.headers['x-vortex-sdk-name'] = 'vortex-ruby-sdk'
+        conn.headers['x-vortex-sdk-version'] = Vortex::VERSION
       end
     end
 
