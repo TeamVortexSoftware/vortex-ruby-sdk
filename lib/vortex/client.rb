@@ -479,6 +479,46 @@ module Vortex
       raise VortexError, "Failed to configure autojoin: #{e.message}"
     end
 
+    # Sync an internal invitation action (accept or decline)
+    #
+    # This method notifies Vortex that an internal invitation was accepted or declined
+    # within your application, so Vortex can update the invitation status accordingly.
+    #
+    # @param creator_id [String] The inviter's user ID
+    # @param target_value [String] The invitee's user ID
+    # @param action [String] The action taken: "accepted" or "declined"
+    # @param component_id [String] The widget component UUID
+    # @return [Hash] Response with :processed count and :invitationIds array
+    # @raise [VortexError] If the request fails
+    #
+    # @example
+    #   result = client.sync_internal_invitation(
+    #     'user-123',
+    #     'user-456',
+    #     'accepted',
+    #     'component-uuid-789'
+    #   )
+    #   puts "Processed #{result['processed']} invitations"
+    def sync_internal_invitation(creator_id, target_value, action, component_id)
+      body = {
+        creatorId: creator_id,
+        targetValue: target_value,
+        action: action,
+        componentId: component_id
+      }
+
+      response = @connection.post('/api/v1/invitation-actions/sync-internal-invitation') do |req|
+        req.headers['Content-Type'] = 'application/json'
+        req.body = JSON.generate(body)
+      end
+
+      handle_response(response)
+    rescue VortexError
+      raise
+    rescue => e
+      raise VortexError, "Failed to sync internal invitation: #{e.message}"
+    end
+
     private
 
     def build_connection

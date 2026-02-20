@@ -174,6 +174,7 @@ All methods match the functionality of other Vortex SDKs:
 - `get_invitations_by_group(group_type, group_id)` - Get group invitations
 - `delete_invitations_by_group(group_type, group_id)` - Delete group invitations
 - `reinvite(invitation_id)` - Reinvite user
+- `sync_internal_invitation(creator_id, target_value, action, component_id)` - Sync internal invitation action
 
 ## Route Structure
 
@@ -187,6 +188,7 @@ The SDK provides these routes (same as other SDKs for React provider compatibili
 - `GET /api/vortex/invitations/by-group/:type/:id`
 - `DELETE /api/vortex/invitations/by-group/:type/:id`
 - `POST /api/vortex/invitations/:id/reinvite`
+- `POST /api/vortex/invitation-actions/sync-internal-invitation`
 
 ## JWT Payload Structure
 
