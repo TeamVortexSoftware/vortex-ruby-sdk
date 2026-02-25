@@ -188,7 +188,7 @@ The SDK provides these routes (same as other SDKs for React provider compatibili
 - `GET /api/vortex/invitations/by-group/:type/:id`
 - `DELETE /api/vortex/invitations/by-group/:type/:id`
 - `POST /api/vortex/invitations/:id/reinvite`
-- `POST /api/vortex/invitation-actions/sync-internal-invitation`
+- `POST /api/vortex/invitations/sync-internal-invitation`
 
 ## Sync Internal Invitation
 

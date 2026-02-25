@@ -507,7 +507,7 @@ module Vortex
         componentId: component_id
       }
 
-      response = @connection.post('/api/v1/invitation-actions/sync-internal-invitation') do |req|
+      response = @connection.post('/api/v1/invitations/sync-internal-invitation') do |req|
         req.headers['Content-Type'] = 'application/json'
         req.body = JSON.generate(body)
       end
