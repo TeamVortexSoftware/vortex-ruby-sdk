@@ -262,6 +262,50 @@ To install this gem onto your local machine, run `bundle exec rake install`.
 
 ## Contributing
 
+## Webhooks
+
+The SDK provides built-in support for verifying and parsing incoming webhook events from Vortex.
+
+```ruby
+require 'vortex'
+
+webhooks = Vortex::Webhooks.new(secret: ENV['VORTEX_WEBHOOK_SECRET'])
+
+# In your HTTP handler (Rails example):
+class WebhooksController < ApplicationController
+  skip_before_action :verify_authenticity_token
+
+  def create
+    payload = request.body.read
+    signature = request.headers['X-Vortex-Signature']
+
+    begin
+      event = webhooks.construct_event(payload, signature)
+    rescue Vortex::WebhookSignatureError
+      head :bad_request
+      return
+    end
+
+    case event
+    when Vortex::WebhookEvent
+      Rails.logger.info "Webhook event: #{event.type}"
+    when Vortex::AnalyticsEvent
+      Rails.logger.info "Analytics event: #{event.name}"
+    end
+
+    head :ok
+  end
+end
+```
+
+### Event Type Constants
+
+```ruby
+if event.type == Vortex::WebhookEventTypes::INVITATION_ACCEPTED
+  # Handle invitation accepted
+end
+```
+
 Bug reports and pull requests are welcome on GitHub at https://github.com/vortexsoftware/vortex-ruby-sdk.
 
 ## License

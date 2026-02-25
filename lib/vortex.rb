@@ -3,6 +3,8 @@
 require 'vortex/version'
 require 'vortex/error'
 require 'vortex/types'
+require 'vortex/webhook_types'
+require 'vortex/webhooks'
 require 'vortex/client'
 
 # Vortex Ruby SDK
